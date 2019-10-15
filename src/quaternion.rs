@@ -4,7 +4,7 @@ use super::*;
 use std::convert::From;
 use std::ops::*;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Quaternion {
     pub r: f32,
     pub i: f32,
@@ -287,4 +287,36 @@ quatop_neg!(&Quaternion);
 mod test {
     use super::*;
 
+    #[test]
+    fn basic() {
+        let r = Quaternion::new(1.0, 0.0, 0.0, 0.0);
+        let i = Quaternion::new(0.0, 1.0, 0.0, 0.0);
+        let j = Quaternion::new(0.0, 0.0, 1.0, 0.0);
+        let k = Quaternion::new(0.0, 0.0, 0.0, 1.0);
+
+        // Multiplication by unit real
+        assert_approx_eq!(r * r, r);
+        assert_approx_eq!(r * i, i);
+        assert_approx_eq!(i * r, i);
+        assert_approx_eq!(r * j, j);
+        assert_approx_eq!(j * r, j);
+        assert_approx_eq!(r * k, k);
+        assert_approx_eq!(k * r, k);
+
+        // Squares of imaginary components
+        assert_approx_eq!(i * i, -r);
+        assert_approx_eq!(j * j, -r);
+        assert_approx_eq!(k * k, -r);
+
+        // Circle of imaginaries
+        assert_approx_eq!(i * j, k);
+        assert_approx_eq!(j * k, i);
+        assert_approx_eq!(k * i, j);
+
+        assert_approx_eq!(j * i, -k);
+        assert_approx_eq!(i * k, -j);
+        assert_approx_eq!(k * j, -i);
+
+        assert_approx_eq!(i * j * k, -r);
+    }
 }

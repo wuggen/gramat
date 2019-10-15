@@ -4,12 +4,12 @@ use super::*;
 use std::convert::*;
 use std::ops::*;
 
-pub trait SquareMatrix {
+pub trait SquareMatrix: Copy {
     /// The type used to represent the columns and rows of the matrix type.
     type VecType;
 
     /// The number of rows (or columns) of this matrix.
-    fn dimension() -> usize;
+    const DIMS: usize;
 
     /// Produce a matrix whose elements are all 1's.
     fn ones() -> Self;
@@ -33,31 +33,55 @@ pub trait SquareMatrix {
     ///
     /// This is the determinant of the matrix produced by omitting the `row`'th row and the
     /// `col`'th column of this matrix.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if either `col` or `row` is out of bounds of the matrix.
     fn minor(&self, col: usize, row: usize) -> f32;
 
     /// Get the `row`-`col` cofactor of this matrix.
     ///
     /// This is the `row`-`col` minor, multiplied by 1 or -1 depending on the parity of
     /// `row`+`col`.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if either `col` or `row` is out of bounds of the matrix.
     fn cofactor(&self, col: usize, row: usize) -> f32;
 
     /// Get the `i`'th column of this matrix.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `i` is out of bounds.
     fn get_col(&self, i: usize) -> Self::VecType;
 
     /// Get the `i`'th row of this matrix.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `i` is out of bounds.
     fn get_row(&self, i: usize) -> Self::VecType;
 
     /// Set the `i`'th column of this matrix to match the given vector.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `i` is out of bounds.
     fn set_col(&mut self, i: usize, c: Self::VecType);
 
     /// Set the `i`'th row of this matrix to match the given vector.
+    ///
+    /// # Panics
+    ///
+    /// This function panics if `i` is out of bounds.
     fn set_row(&mut self, i: usize, r: Self::VecType);
 }
 
 macro_rules! decl_mat {
     ($name:ident, $coltype:ident, $($cols:ident),+ | $($dims:ident),+) => {
         #[repr(C)]
-        #[derive(Debug, Clone)]
+        #[derive(Debug, Clone, Copy)]
         pub struct $name {
             $($cols: $coltype),+
         }
@@ -75,10 +99,7 @@ macro_rules! decl_mat {
         impl SquareMatrix for $name {
             type VecType = $coltype;
 
-            #[inline(always)]
-            fn dimension() -> usize {
-                count_args!($($cols),+)
-            }
+            const DIMS: usize = count_args!($($cols),+);
 
             fn ones() -> Self {
                 $name {
@@ -127,12 +148,12 @@ macro_rules! decl_mat {
             }
 
             fn get_col(&self, i: usize) -> $coltype {
-                assert!(i < $name::dimension(), "Column index out of bounds");
+                assert!(i < $name::DIMS, "Column index out of bounds");
                 self[i].clone()
             }
 
             fn get_row(&self, i: usize) -> $coltype {
-                assert!(i < $name::dimension(), "Row index out of bounds");
+                assert!(i < $name::DIMS, "Row index out of bounds");
                 $coltype {
                     $($dims: self.$cols[i]),+
                 }
@@ -251,7 +272,7 @@ macro_rules! decl_mat {
             #[doc = "Matrix-vector multiplication operation."]
             fn mul(self, rhs: $rhs) -> $vectype {
                 let mut res = $vectype::zeros();
-                for col in 0..$name::dimension() {
+                for col in 0..$name::DIMS {
                     res += &rhs[col] * &self[col];
                 }
                 res
@@ -260,8 +281,8 @@ macro_rules! decl_mat {
     };
 
     (@MATMUL $name:ident, $($cols:ident),+) => {
-        //decl_mat!(@MATMUL_SINGLE $name, $name, $name, $($cols),+);
-        //decl_mat!(@MATMUL_SINGLE $name, $name, &$name, $($cols),+);
+        decl_mat!(@MATMUL_SINGLE $name, $name, $name, $($cols),+);
+        decl_mat!(@MATMUL_SINGLE $name, $name, &$name, $($cols),+);
         decl_mat!(@MATMUL_SINGLE $name, &$name, $name, $($cols),+);
         decl_mat!(@MATMUL_SINGLE $name, &$name, &$name, $($cols),+);
     };
@@ -509,14 +530,14 @@ macro_rules! test_mat {
     ($name:ident, $vec:ident, $($dims:ident),+) => {
         #[test]
         fn dimension() {
-            assert_eq!($name::dimension(), count_args!($($dims),+));
+            assert_eq!($name::DIMS, count_args!($($dims),+));
         }
 
         #[test]
         fn ones() {
             let m = $name::ones();
-            for i in 0..$name::dimension() {
-                for j in 0..$name::dimension() {
+            for i in 0..$name::DIMS {
+                for j in 0..$name::DIMS {
                     assert!(m[i][j].approx_eq(&1.0));
                 }
             }
@@ -525,8 +546,8 @@ macro_rules! test_mat {
         #[test]
         fn zeros() {
             let m = $name::zeros();
-            for i in 0..$name::dimension() {
-                for j in 0..$name::dimension() {
+            for i in 0..$name::DIMS {
+                for j in 0..$name::DIMS {
                     assert!(m[i][j].approx_eq(&0.0));
                 }
             }
@@ -535,8 +556,8 @@ macro_rules! test_mat {
         #[test]
         fn identity() {
             let m = $name::identity();
-            for i in 0..$name::dimension() {
-                for j in 0..$name::dimension() {
+            for i in 0..$name::DIMS {
+                for j in 0..$name::DIMS {
                     if i == j {
                         assert!(m[i][j].approx_eq(&1.0));
                     } else {
@@ -549,8 +570,8 @@ macro_rules! test_mat {
         #[test]
         fn transpose() {
             let mut m = $name::zeros();
-            for i in 0..$name::dimension() {
-                for j in 0..$name::dimension() {
+            for i in 0..$name::DIMS {
+                for j in 0..$name::DIMS {
                     if i >= j {
                         m[i][j] = 1.0;
                     }
@@ -558,8 +579,8 @@ macro_rules! test_mat {
             }
 
             let m = m.transpose();
-            for i in 0..$name::dimension() {
-                for j in 0..$name::dimension() {
+            for i in 0..$name::DIMS {
+                for j in 0..$name::DIMS {
                     if i <= j {
                         assert!(m[i][j].approx_eq(&1.0));
                     } else {
