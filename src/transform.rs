@@ -204,13 +204,21 @@ pub fn rotate(axis: Vec3, angle: Angle) -> Mat4 {
 /// # Errors and Panics
 /// There is a singularity that results in a divide by zero when the (`eye` - `center`) vector is
 /// parallel to the `up` vector.
-#[allow(unused_variables)]
 pub fn look_at(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
-    let facing = center - eye;
-    let facing_unit = facing.unit();
-    let up_unit = up.unit();
-    // TODO
-    unimplemented!()
+    let facing = (center - eye).unit();
+    let horiz = facing.cross(&up).unit();
+    let cam_up = horiz.cross(&facing);
+
+    let mut mat = Mat4::identity();
+    mat.set_row(0, horiz.extend(0.0));
+    mat.set_row(1, cam_up.extend(0.0));
+    mat.set_row(2, -facing.extend(0.0));
+
+    mat[3][0] = -eye.dot(&horiz);
+    mat[3][1] = -eye.dot(&cam_up);
+    mat[3][2] = eye.dot(&facing);
+
+    mat
 }
 
 #[cfg(test)]

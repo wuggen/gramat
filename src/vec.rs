@@ -75,8 +75,8 @@ use super::*;
 ///
 /// This trait defines vectors very generally; in fact, it does not even constrain implementors to
 /// be true vector spaces. In particular, it requires that a scalar type be associated with the
-/// implementing vector type, but does not require that the operations of scalar multiplcation or
-/// vector addition be defined, or that the scalar type is a mathematical field.
+/// implementing vector type, and that scalar multiplication and vector addition are defined, but
+/// does not require that the scalar type is a mathematical field.
 ///
 /// In most cases, however, implementors will want to define common mathematical operations, at
 /// least for scalar multiplication and vector addition.
@@ -129,6 +129,12 @@ pub trait Vector {
 
     /// Returns the normalized (unit-length) version of this vector.
     fn unit(&self) -> Self;
+
+    /// The scalar multiplication operation.
+    fn scalar_mul(&self, s: &Self::Scalar) -> Self;
+
+    /// The vector addition operation.
+    fn vector_add(&self, v: &Self) -> Self;
 }
 
 macro_rules! decl_vec {
@@ -186,6 +192,16 @@ macro_rules! decl_vec {
 
             fn unit(&self) -> Self {
                 self / self.length()
+            }
+
+            #[inline(always)]
+            fn scalar_mul(&self, s: &f32) -> Self {
+                s * self
+            }
+
+            #[inline(always)]
+            fn vector_add(&self, v: &Self) -> Self {
+                self + v
             }
         }
 
@@ -404,7 +420,7 @@ impl Vec3 {
         }
     }
 
-    /// Get a homogeneous representation of this `Vec3`.
+    /// Get a homogeneous (point) representation of this `Vec3`.
     ///
     /// This is equivalent to calling `vec3.extend(1.0)`.
     #[inline(always)]
@@ -437,6 +453,11 @@ impl Vec4 {
     pub fn homogenize(self) -> Vec3 {
         self.truncate() / self.w
     }
+}
+
+/// Project one vector onto another.
+pub fn project<V: Vector>(from: &V, onto: &V) -> V {
+    onto.scalar_mul(&from.unit().dot(&onto.unit()))
 }
 
 #[cfg(test)]
