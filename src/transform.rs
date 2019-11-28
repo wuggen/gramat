@@ -1,3 +1,5 @@
+//! Assorted utilities for constructing 3D homogeneous transformation and projection matrices.
+
 use super::*;
 
 /// A builder struct for homogeneous transformation matrices.
@@ -201,12 +203,13 @@ pub fn rotate(axis: Vec3, angle: Angle) -> Mat4 {
 /// * `center` The point towards which the camera is facing.
 /// * `up` A vector in the upwards direction, usually `vec3!(0.0, 0.0, 1.0)`.
 ///
-/// # Errors and Panics
-/// There is a singularity that results in a divide by zero when the (`eye` - `center`) vector is
-/// parallel to the `up` vector.
-pub fn look_at(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
+/// # Usage Warnings
+/// An `up` vector parallel to the camera's facing direction will result in a singular matrix that
+/// collapses all points onto the _z_ axis. This is probably not what you want. The function does
+/// not check for this condition, so users should check their input to avoid it.
+pub fn look_at(eye: &Vec3, center: &Vec3, up: &Vec3) -> Mat4 {
     let facing = (center - eye).unit();
-    let horiz = facing.cross(&up).unit();
+    let horiz = facing.cross(&up.unit());
     let cam_up = horiz.cross(&facing);
 
     let mut mat = Mat4::identity();
@@ -217,6 +220,77 @@ pub fn look_at(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
     mat[3][0] = -eye.dot(&horiz);
     mat[3][1] = -eye.dot(&cam_up);
     mat[3][2] = eye.dot(&facing);
+
+    mat
+}
+
+/// Build an orthographic normalization matrix.
+///
+/// The resulting clipping volume is a right, axis-aligned parallelepiped. The left and right
+/// planes are at the given positions on the _x_ axis, the top and bottom planes at the given
+/// positions on the _y_ axis, and the near and far planes at _z_ = `-near` and `-far`.
+///
+/// This volume is mapped to the canonical viewing volume (the 2x2x2 cube centered at the origin).
+/// The _z_ axis is inverted, so that the near and far planes are mapped to normalized _z_
+/// coordinates -1 and 1 respectively (the OpenGL convention).
+pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Mat4 {
+    let mut mat = Mat4::identity();
+
+    mat[0][0] = 2.0 / (right - left);
+    mat[1][1] = 2.0 / (top - bottom);
+    mat[2][2] = -2.0 / (far - near);
+
+    mat[3][0] = - (right + left) / (right - left);
+    mat[3][1] = - (top + bottom) / (top - bottom);
+    mat[3][2] = - (far + near) / (far - near);
+
+    mat
+}
+
+/// Construct a frustum normalization matrix.
+///
+/// The resulting frustum has its apex at the origin, and its near and far faces centered on and
+/// perpendicular to the negative _z_ axis at the specified distances. The near face has the given
+/// width and height. This volume is then mapped to the canonical viewing volume (the 2x2x2 cube
+/// centered at the origin).
+///
+/// The near and far planes are mapped to normalized _z_ coordinates -1 and 1 respectively (the
+/// OpenGL convention).
+pub fn frustum(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> Mat4 {
+    let mut mat = Mat4::zeros();
+
+    mat[0][0] = (2.0 * near) / (right - left);
+    mat[1][1] = (2.0 * near) / (top - bottom);
+
+    mat[2][0] = (right + left) / (right - left);
+    mat[2][1] = (top + bottom) / (top - bottom);
+    mat[2][2] = - (far + near) / (far - near);
+    mat[2][3] = -1.0;
+
+    mat[3][2] = - (2.0 * far * near) / (far - near);
+
+    mat
+}
+
+/// Build a perspective normalization matrix.
+///
+/// The resulting view volume is a symmetric frustum centered on the _z_ axis with its apex at the
+/// origin, near plane at _z_ = `-near`, and far plane at _z_ = `-far`. `fovy` gives the vertical
+/// field of view, with the horizontal field of view determined from this by `aspect_xy`, which is
+/// the ratio width / height of the viewport dimensions.
+///
+/// This volume is mapped to the canonical viewing volume (the 2x2x2 cube centered at the origin).
+/// The near and far planes are mapped to normalized _z_ coordinates -1 and 1 respectively.
+pub fn perspective(fovy: Angle, aspect_xy: f32, near: f32, far: f32) -> Mat4 {
+    let tan_half_fov = (fovy / 2.0).tan();
+    let mut mat = Mat4::zeros();
+
+    mat[0][0] = 1.0 / (aspect_xy * tan_half_fov);
+    mat[1][1] = 1.0 / tan_half_fov;
+    mat[2][2] = - (far + near) / (far - near);
+
+    mat[2][3] = -1.0;
+    mat[3][2] = - (2.0 * far * near) / (far - near);
 
     mat
 }

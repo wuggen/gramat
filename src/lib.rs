@@ -22,18 +22,18 @@ macro_rules! count_args {
 /// # Example
 /// ```
 /// # #[macro_use] extern crate gramat;
-/// use gramat::util::ApproxEq;
+/// use gramat::ApproxEq;
 /// # fn main() {
 /// assert_approx_eq!(1.0_f32, 1.0_f32);
 ///
-/// assert_approx_eq!(1.0, 1.0 + 0.5 * gramat::util::EQ_THRESHOLD_F32,
+/// assert_approx_eq!(1.0, 1.0 + 0.5 * gramat::fp::EQ_THRESHOLD_F32,
 ///     "{} and {} were not approximately equal; this shouldn't happen!",
 ///     1.0,
-///     1.0 + 0.5 * gramat::util::EQ_THRESHOLD_F32);
+///     1.0 + 0.5 * gramat::fp::EQ_THRESHOLD_F32);
 /// # }
 /// ```
 ///
-/// [`ApproxEq`]: util/trait.ApproxEq.html
+/// [`ApproxEq`]: fp/trait.ApproxEq.html
 #[macro_export]
 macro_rules! assert_approx_eq {
     ($a:expr, $b:expr, $($msg:expr),*) => {
@@ -70,7 +70,7 @@ macro_rules! assert_approx_eq {
 /// # }
 /// ```
 ///
-/// [`ApproxEq`]: util/trait.ApproxEq.html
+/// [`ApproxEq`]: fp/trait.ApproxEq.html
 #[macro_export]
 macro_rules! assert_within_threshold {
     ($a:expr, $b:expr, $thresh:expr, $($msg:expr),*) => {
@@ -120,14 +120,14 @@ pub mod angle;
 pub mod mat;
 pub mod quaternion;
 pub mod transform;
-pub mod util;
+pub mod fp;
 pub mod vec;
 
-pub use angle::*;
-pub use mat::*;
-pub use quaternion::*;
-pub use util::*;
-pub use vec::*;
+pub use angle::Angle;
+pub use mat::{SquareMatrix, Mat2, Mat3, Mat4};
+pub use quaternion::Quaternion;
+pub use fp::ApproxEq;
+pub use vec::{Vector, Vec2, Vec3, Vec4};
 
 #[cfg(test)]
 mod test_util;

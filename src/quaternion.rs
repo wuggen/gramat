@@ -51,12 +51,13 @@ impl Quaternion {
     /// Conjugate this `Quaternion` by `q`, which is assumed to be of unit magnitude.
     ///
     /// This function takes advantage of the fact that, for unit quaternions, the inverse is equal
-    /// to the complex conjugate, and so omits several floating point divisions in the calculation
+    /// to the complex conjugate, and so omits several floating point operations in the calculation
     /// of `q`'s inverse.
     ///
-    /// *NB:* This function _does not check_ that `q` is of unit magnitude! Doing so would require
-    /// the same divisions that the unit-magnitude assumption avoids. The user should be sure that
-    /// `q` is actually a unit quaternion, or simply use `conjugate_by`, which performs the full
+    /// # Usage Warning
+    /// This function _does not check_ that `q` is of unit magnitude! Doing so would require the
+    /// same operations that the unit-magnitude assumption avoids. The user should be sure that `q`
+    /// is actually a unit quaternion, or simply use `conjugate_by`, which performs the full
     /// calculation for inverting `q`.
     pub fn conjugate_by_unit(&self, q: &Quaternion) -> Quaternion {
         q * self * q.neg_vector()

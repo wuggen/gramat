@@ -456,8 +456,33 @@ impl Vec4 {
 }
 
 /// Project one vector onto another.
+///
+/// Returns the projection of `from` onto `onto`.
 pub fn project<V: Vector>(from: &V, onto: &V) -> V {
     onto.scalar_mul(&from.unit().dot(&onto.unit()))
+}
+
+/// A free function version of [`Vector::length`](trait.Vector.html#tymethod.length).
+#[inline(always)]
+pub fn length<V: Vector>(v: &V) -> V::Scalar {
+    v.length()
+}
+
+/// A free function version of [`Vector::dot`](trait.Vector.html#tymethod.dot).
+#[inline(always)]
+pub fn dot<V: Vector>(a: &V, b: &V) -> V::Scalar {
+    a.dot(b)
+}
+
+/// A free function version of [`Vector::unit`](trait.Vector.html#tymethod.unit).
+#[inline(always)]
+pub fn normalize<V: Vector>(v: &V) -> V {
+    v.unit()
+}
+
+/// A free function version of [`Vec3::cross`](struct.Vec3.html#method.cross).
+pub fn cross(a: &Vec3, b: &Vec3) -> Vec3 {
+    a.cross(b)
 }
 
 #[cfg(test)]
