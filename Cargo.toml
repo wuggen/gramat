@@ -1,7 +1,18 @@
 [package]
 name = "gramat"
-version = "0.1.0"
+version = "0.1.0" # Bump html_root_url
 authors = ["John Andrews <theunderdog09@gmail.com>"]
 edition = "2018"
+
+description = "Simple, 32-bit floating-point graphics math."
+readme = "README.md"
+
+documentation = "https://docs.rs/gramat"
+homepage = "https://github.com/wuggen/gramat"
+repository = "https://github.com/wuggen/gramat"
+
+keywords = [ "graphics", "math", "opengl" ]
+categories = [ "Graphics", "Mathematics" ]
+license = "MIT"
 
 [dependencies]

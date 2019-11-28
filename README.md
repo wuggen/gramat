@@ -8,17 +8,14 @@ reasons:
 3. My own entertainment.
 
 It's got very few bells and whistles, and all of it is based inextricably on
-32-bit floating point.
+32-bit floating point. It's being developed alongside several personal projects
+and is very unstable; expect many breaking changes!
 
 ## Features
 - Two, three, and four-dimensional vectors and square matrices, with a pretty
-  complete set of mathematical operators!
+  complete set of operators!
 - Quaternions for rotation and whatever else they might be useful for!
-- Various tranformation and projection functions!
+- A unified angle representation to do away with radians-vs-degrees confusion!
+- Assorted tranformation and projection functions!
 - Some documentation!
 - Some unit tests!
-
-## License
-Gramat is licensed under the MIT license. See [LICENSE.txt] for details.
-
-[LICENSE.txt]: LICENSE.txt
