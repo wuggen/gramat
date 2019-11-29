@@ -3,7 +3,7 @@
 //! Includes two, three, and four-dimensional real vectors and matrices, quaternions, and
 //! assorted utilities for transformations and projections.
 
-#![doc(html_root_url = "https://docs.rs/gramit/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/gramit/0.1.1")]
 
 macro_rules! replace_tt {
     ($_t:tt, $sub:expr) => {

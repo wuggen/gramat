@@ -1,6 +1,6 @@
 [package]
 name = "gramit"
-version = "0.1.0" # Bump html_root_url
+version = "0.1.1" # Bump html_root_url
 authors = ["John Andrews <theunderdog09@gmail.com>"]
 edition = "2018"
 
