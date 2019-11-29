@@ -1,4 +1,4 @@
-# Gramat (<b>Gra</b>phics <b>Mat</b>h)
+# Gramit
 
 This is a simple graphics math library I started working on for the following
 reasons:
@@ -14,8 +14,8 @@ and is very unstable; expect many breaking changes!
 ## Features
 - Two, three, and four-dimensional vectors and square matrices, with a pretty
   complete set of operators!
-- Quaternions for rotation and whatever else they might be useful for!
+- Quaternions, for rotation and whatever else they might be useful for!
 - A unified angle representation to do away with radians-vs-degrees confusion!
-- Assorted tranformation and projection functions!
+- Assorted tranformation and projection utilities!
 - Some documentation!
 - Some unit tests!

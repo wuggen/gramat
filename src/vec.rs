@@ -9,8 +9,8 @@
 //! other vectors:
 //!
 //! ```
-//! # #[macro_use] extern crate gramat;
-//! # use gramat::*;
+//! # #[macro_use] extern crate gramit;
+//! # use gramit::*;
 //! let v1 = vec2!(1.0, 2.0);
 //! let v2 = vec2!(3.0, 4.0);
 //!
@@ -58,7 +58,7 @@
 //! moves for their arguments, and all three vector types are `Copy`. In most cases, it should be
 //! uneccessary to explicitly reference or dereference vectors in order to perform arithmetic.
 //!
-//! For convenience, `gramat` defines the macros [`vec2`](../macro.vec2.html),
+//! For convenience, `gramit` defines the macros [`vec2`](../macro.vec2.html),
 //! [`vec3`](../macro.vec3.html), and [`vec4`](../macro.vec4.html) for creating new vectors.
 //!
 //! [`Vector`]: trait.Vector.html

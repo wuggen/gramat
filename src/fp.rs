@@ -29,7 +29,7 @@ pub const EQ_THRESHOLD_F32: f32 = 16.0 * std::f32::EPSILON;
 /// intended to make this pattern a little more ergonomic by supplying a default difference
 /// threshold and encapsulating the comparison in a single method.
 ///
-/// `gramat` implements `ApproxEq` for `f32` and all of the `gramat` mathematical objects (vectors,
+/// `gramit` implements `ApproxEq` for `f32` and all of the `gramit` mathematical objects (vectors,
 /// matrices, etc). All of these implementations use the default threshold [`EQ_THRESHOLD_F32`].
 /// There are also assertion macros [`assert_approx_eq`] and [`assert_within_threshold`]
 /// corresponding to `ApproxEq`'s trait methods.

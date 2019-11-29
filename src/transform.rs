@@ -10,9 +10,9 @@ use super::*;
 ///
 /// # Example
 /// ```rust
-/// # extern crate gramat;
-/// # use gramat::*;
-/// use gramat::transform::Transform;
+/// # extern crate gramit;
+/// # use gramit::*;
+/// use gramit::transform::Transform;
 ///
 /// // `mat` is a matrix that represents the effect of _first_ shearing the x axis 1 unit in the
 /// // y direction, _then_ rotating about the y axis 180 degrees.

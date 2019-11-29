@@ -3,7 +3,7 @@
 //! Includes two, three, and four-dimensional real vectors and matrices, quaternions, and
 //! assorted utilities for transformations and projections.
 
-#![doc(html_root_url = "https://docs.rs/gramat/0.1.0")]
+#![doc(html_root_url = "https://docs.rs/gramit/0.1.0")]
 
 macro_rules! replace_tt {
     ($_t:tt, $sub:expr) => {
@@ -23,15 +23,15 @@ macro_rules! count_args {
 ///
 /// # Example
 /// ```
-/// # #[macro_use] extern crate gramat;
-/// use gramat::ApproxEq;
+/// # #[macro_use] extern crate gramit;
+/// use gramit::ApproxEq;
 /// # fn main() {
 /// assert_approx_eq!(1.0_f32, 1.0_f32);
 ///
-/// assert_approx_eq!(1.0, 1.0 + 0.5 * gramat::fp::EQ_THRESHOLD_F32,
+/// assert_approx_eq!(1.0, 1.0 + 0.5 * gramit::fp::EQ_THRESHOLD_F32,
 ///     "{} and {} were not approximately equal; this shouldn't happen!",
 ///     1.0,
-///     1.0 + 0.5 * gramat::fp::EQ_THRESHOLD_F32);
+///     1.0 + 0.5 * gramit::fp::EQ_THRESHOLD_F32);
 /// # }
 /// ```
 ///
@@ -53,8 +53,8 @@ macro_rules! assert_approx_eq {
 ///
 /// # Example
 /// ```
-/// # #[macro_use] extern crate gramat;
-/// use gramat::ApproxEq;
+/// # #[macro_use] extern crate gramit;
+/// use gramit::ApproxEq;
 /// # fn main() {
 /// assert_within_threshold!(1.0, 1.5, 0.75);
 /// assert_within_threshold!(0.0, 0.1, 0.2,
@@ -64,8 +64,8 @@ macro_rules! assert_approx_eq {
 /// ```
 ///
 /// ```should_panic
-/// # #[macro_use] extern crate gramat;
-/// use gramat::ApproxEq;
+/// # #[macro_use] extern crate gramit;
+/// use gramit::ApproxEq;
 /// # fn main() {
 /// // Panics!
 /// assert_within_threshold!(1.0, 2.0, 0.5);
