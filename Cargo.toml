@@ -12,7 +12,7 @@ homepage = "https://github.com/wuggen/gramit"
 repository = "https://github.com/wuggen/gramit"
 
 keywords = [ "graphics", "math", "opengl" ]
-categories = [ "Graphics", "Mathematics" ]
+categories = [ "graphics", "mathematics" ]
 license = "MIT"
 
 [dependencies]
