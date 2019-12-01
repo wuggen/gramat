@@ -11,8 +11,12 @@ documentation = "https://docs.rs/gramit"
 homepage = "https://github.com/wuggen/gramit"
 repository = "https://github.com/wuggen/gramit"
 
-keywords = [ "graphics", "math", "opengl" ]
-categories = [ "graphics", "mathematics" ]
+keywords = ["graphics", "math", "opengl"]
+categories = ["graphics", "mathematics"]
 license = "MIT"
 
+[features]
+default = []
+
 [dependencies]
+serde = { version = "1.0", optional = true, features = ["derive"] }

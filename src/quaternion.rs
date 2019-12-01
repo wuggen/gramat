@@ -4,7 +4,11 @@ use super::*;
 use std::convert::From;
 use std::ops::*;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, PartialEq, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Quaternion {
     pub r: f32,
     pub i: f32,

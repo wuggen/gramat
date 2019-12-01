@@ -69,6 +69,9 @@
 use std::convert::*;
 use std::ops::*;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 use super::*;
 
 /// Generic vector operations.
@@ -140,7 +143,8 @@ pub trait Vector {
 macro_rules! decl_vec {
     ($name:ident, $($dims:ident),+) => {
         #[repr(C)]
-        #[derive(Debug, Clone, Copy)]
+        #[derive(Debug, PartialEq, Clone, Copy)]
+        #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
         pub struct $name {
             $(pub $dims: f32),+
         }

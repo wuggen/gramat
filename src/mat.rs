@@ -4,6 +4,9 @@ use super::*;
 use std::convert::*;
 use std::ops::*;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 pub trait SquareMatrix: Copy {
     /// The type used to represent the columns and rows of the matrix type.
     type VecType;
@@ -81,7 +84,8 @@ pub trait SquareMatrix: Copy {
 macro_rules! decl_mat {
     ($name:ident, $coltype:ident, $($cols:ident),+ | $($dims:ident),+) => {
         #[repr(C)]
-        #[derive(Debug, Clone, Copy)]
+        #[derive(Debug, PartialEq, Clone, Copy)]
+        #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
         pub struct $name {
             $($cols: $coltype),+
         }

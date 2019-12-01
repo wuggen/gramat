@@ -7,10 +7,14 @@
 
 use std::ops::*;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 /// An angle struct independent of representation as either degrees or radians.
 ///
 /// See the [module-level documentation](index.html) for more details.
-#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(transparent)]
 pub struct Angle {
     radians: f32,
@@ -67,7 +71,7 @@ impl Angle {
     /// For other values, produces `None`.
     pub fn asin(x: f32) -> Option<Angle> {
         let radians = x.asin();
-        if x.is_nan() {
+        if radians.is_nan() {
             None
         } else {
             Some(Angle { radians })
@@ -80,7 +84,7 @@ impl Angle {
     /// other values, produces `None`.
     pub fn acos(x: f32) -> Option<Angle> {
         let radians = x.acos();
-        if x.is_nan() {
+        if radians.is_nan() {
             None
         } else {
             Some(Angle { radians })

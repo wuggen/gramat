@@ -119,17 +119,17 @@ macro_rules! vec4 {
 }
 
 pub mod angle;
+pub mod fp;
 pub mod mat;
 pub mod quaternion;
 pub mod transform;
-pub mod fp;
 pub mod vec;
 
 pub use angle::Angle;
-pub use mat::{SquareMatrix, Mat2, Mat3, Mat4};
-pub use quaternion::Quaternion;
 pub use fp::ApproxEq;
-pub use vec::{Vector, Vec2, Vec3, Vec4};
+pub use mat::{Mat2, Mat3, Mat4, SquareMatrix};
+pub use quaternion::Quaternion;
+pub use vec::{Vec2, Vec3, Vec4, Vector};
 
 #[cfg(test)]
 mod test_util;
