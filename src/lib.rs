@@ -39,7 +39,7 @@ macro_rules! count_args {
 #[macro_export]
 macro_rules! assert_approx_eq {
     ($a:expr, $b:expr, $($msg:expr),*) => {
-        assert!($a.approx_eq(&$b), $($msg),*)
+        assert!($a.approx_eq($b), $($msg),*)
     };
 
     ($a:expr, $b:expr) => { assert_approx_eq!($a, $b,) };
@@ -76,7 +76,7 @@ macro_rules! assert_approx_eq {
 #[macro_export]
 macro_rules! assert_within_threshold {
     ($a:expr, $b:expr, $thresh:expr, $($msg:expr),*) => {
-        assert!($a.within_threshold(&$b, &$thresh), $($msg),*)
+        assert!($a.within_threshold($b, $thresh), $($msg),*)
     };
 
     ($a:expr, $b:expr, $thresh:expr) => { assert_within_threshold!($a, $b, $thresh,) };

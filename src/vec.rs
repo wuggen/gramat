@@ -252,14 +252,14 @@ macro_rules! decl_vec {
         }
 
         impl ApproxEq for $name {
-            fn approx_eq(&self, rhs: &$name) -> bool {
-                $(self.$dims.approx_eq(&rhs.$dims))&+
+            fn approx_eq(self, rhs: $name) -> bool {
+                $(self.$dims.approx_eq(rhs.$dims))&+
             }
 
             #[doc = "Compare two vectors for approximate equality.\n\n"]
             #[doc = "Uses a third vector for component-wise thresholds."]
-            fn within_threshold(&self, rhs: &$name, threshold: &$name) -> bool {
-                $(self.$dims.within_threshold(&rhs.$dims, &threshold.$dims))&+
+            fn within_threshold(self, rhs: $name, threshold: $name) -> bool {
+                $(self.$dims.within_threshold(rhs.$dims, threshold.$dims))&+
             }
         }
 
@@ -506,81 +506,81 @@ macro_rules! test_vec {
         #[test]
         fn ones() {
             let v = $name::ones();
-            $(assert!(v.$dims.approx_eq(&1.0));)+
+            $(assert_approx_eq!(v.$dims, 1.0);)+
         }
 
         #[test]
         fn zeros() {
             let v = $name::zeros();
-            $(assert!(v.$dims.approx_eq(&0.0));)+
+            $(assert_approx_eq!(v.$dims, 0.0);)+
         }
 
         #[test]
         fn add() {
             let v = $name::ones() + $name::ones();
-            $(assert!(v.$dims.approx_eq(&2.0));)+
+            $(assert_approx_eq!(v.$dims, 2.0);)+
 
             let mut v = $name::ones();
             v += $name::ones();
-            $(assert!(v.$dims.approx_eq(&2.0));)+
+            $(assert_approx_eq!(v.$dims, 2.0);)+
         }
 
         #[test]
         fn sub() {
             let v = $name::ones() - $name::ones();
-            $(assert!(v.$dims.approx_eq(&0.0));)+
+            $(assert_approx_eq!(v.$dims, 0.0);)+
 
             let mut v = $name::ones();
             v -= $name::ones();
-            $(assert!(v.$dims.approx_eq(&0.0));)+
+            $(assert_approx_eq!(v.$dims, 0.0);)+
         }
 
         #[test]
         fn scalar_mul() {
             let v = $name::ones() * 2.0;
-            $(assert!(v.$dims.approx_eq(&2.0));)+
+            $(assert_approx_eq!(v.$dims, 2.0);)+
 
             let v = 2.0_f32 * $name::ones();
-            $(assert!(v.$dims.approx_eq(&2.0));)+
+            $(assert_approx_eq!(v.$dims, 2.0);)+
 
             let mut v = $name::ones();
             v *= 2.0;
-            $(assert!(v.$dims.approx_eq(&2.0));)+
+            $(assert_approx_eq!(v.$dims, 2.0);)+
         }
 
         #[test]
         fn scalar_div() {
             let v = $name::ones() / 2.0;
-            $(assert!(v.$dims.approx_eq(&0.5));)+
+            $(assert_approx_eq!(v.$dims, 0.5);)+
 
             let mut v = $name::ones();
             v /= 2.0;
-            $(assert!(v.$dims.approx_eq(&0.5));)+
+            $(assert_approx_eq!(v.$dims, 0.5);)+
         }
 
         #[test]
         fn unit_axes() {
             $(let v = $name::$dims();
-              assert!(v.$dims.approx_eq(&1.0));
-              assert!(v.length().approx_eq(&1.0));)+
+              assert_approx_eq!(v.$dims, 1.0);
+              assert_approx_eq!(v.length(), 1.0);)+
         }
 
         #[test]
         fn dot() {
-            assert!($name::ones().dot(&$name::ones()).approx_eq(&($name::DIMS as f32)));
+            assert_approx_eq!($name::ones().dot(&$name::ones()), ($name::DIMS as f32));
 
             let v = $name::ones() * 2.0;
-            assert!(v.dot(&v).approx_eq(&(count_args!($($dims),+) as f32 * 4.0)));
+            assert_approx_eq!(v.dot(&v), (count_args!($($dims),+) as f32 * 4.0));
 
             $(let v = $name::$dims() * 3.0;
-              assert!(v.dot(&v).approx_eq(&9.0));)+
+              assert_approx_eq!(v.dot(&v), 9.0);)+
         }
 
         #[test]
         fn length() {
-            assert!($name::zeros().length().approx_eq(&0.0));
-            assert!($name::ones().length().approx_eq(&(count_args!($($dims),+) as f32).sqrt()));
-            $(assert!($name::$dims().length().approx_eq(&1.0));)+
+            assert_approx_eq!($name::zeros().length(), 0.0);
+            assert_approx_eq!($name::ones().length(), (count_args!($($dims),+) as f32).sqrt());
+            $(assert_approx_eq!($name::$dims().length(), 1.0);)+
         }
 
         #[test]
@@ -591,7 +591,7 @@ macro_rules! test_vec {
             }
 
             for i in 0..count_args!($($dims),+) {
-                assert!(v[i].approx_eq(&(i as f32)));
+                assert_approx_eq!(v[i], (i as f32));
             }
         }
 
@@ -600,7 +600,7 @@ macro_rules! test_vec {
             let v: Vec<_> = $name::zeros().into();
             assert_eq!(v.len(), count_args!($($dims),+));
             for n in v {
-                assert!(n.approx_eq(&0.0));
+                assert_approx_eq!(n, 0.0);
             }
         }
     };

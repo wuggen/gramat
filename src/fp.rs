@@ -18,7 +18,7 @@
 ///
 /// [`ApproxEq`]: trait.ApproxEq.html
 /// [`within_threshold`]: trait.ApproxEq.html#tymethod.within_threshold
-pub const EQ_THRESHOLD_F32: f32 = 16.0 * std::f32::EPSILON;
+pub const EQ_THRESHOLD_F32: f32 = 64.0 * std::f32::EPSILON;
 
 /// Trait for types that can be compared for _approximate_ equality.
 ///
@@ -39,20 +39,20 @@ pub const EQ_THRESHOLD_F32: f32 = 16.0 * std::f32::EPSILON;
 /// [`assert_within_threshold`]: ../macro.assert_within_threshold.html
 pub trait ApproxEq<T = Self> {
     /// Compare two values for approximate equality, using a default difference treshold.
-    fn approx_eq(&self, rhs: &T) -> bool;
+    fn approx_eq(self, rhs: T) -> bool;
 
     /// Compare two values for approximate equality, using a user-defined difference threshold.
-    fn within_threshold(&self, rhs: &T, threshold: &T) -> bool;
+    fn within_threshold(self, rhs: T, threshold: T) -> bool;
 }
 
 impl ApproxEq for f32 {
     #[inline(always)]
-    fn approx_eq(&self, rhs: &f32) -> bool {
-        Self::within_threshold(self, rhs, &EQ_THRESHOLD_F32)
+    fn approx_eq(self, rhs: f32) -> bool {
+        Self::within_threshold(self, rhs, EQ_THRESHOLD_F32)
     }
 
     #[inline(always)]
-    fn within_threshold(&self, rhs: &f32, threshold: &f32) -> bool {
-        f32::abs(*self - *rhs) <= *threshold
+    fn within_threshold(self, rhs: f32, threshold: f32) -> bool {
+        f32::abs(self - rhs) <= threshold
     }
 }

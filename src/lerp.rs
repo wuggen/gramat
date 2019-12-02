@@ -14,12 +14,12 @@ use serde::{Deserialize, Serialize};
 pub struct Fraction(f32);
 
 impl ApproxEq for Fraction {
-    fn approx_eq(&self, rhs: &Self) -> bool {
-        self.0.approx_eq(&rhs.0)
+    fn approx_eq(self, rhs: Self) -> bool {
+        self.0.approx_eq(rhs.0)
     }
 
-    fn within_threshold(&self, rhs: &Self, threshold: &Self) -> bool {
-        self.0.within_threshold(&rhs.0, &threshold.0)
+    fn within_threshold(self, rhs: Self, threshold: Self) -> bool {
+        self.0.within_threshold(rhs.0, threshold.0)
     }
 }
 

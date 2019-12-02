@@ -104,11 +104,11 @@ impl Quaternion {
 }
 
 impl ApproxEq for Quaternion {
-    fn approx_eq(&self, rhs: &Quaternion) -> bool {
-        self.r.approx_eq(&rhs.r)
-            & self.i.approx_eq(&rhs.i)
-            & self.j.approx_eq(&rhs.j)
-            & self.k.approx_eq(&rhs.k)
+    fn approx_eq(self, rhs: Quaternion) -> bool {
+        self.r.approx_eq(rhs.r)
+            & self.i.approx_eq(rhs.i)
+            & self.j.approx_eq(rhs.j)
+            & self.k.approx_eq(rhs.k)
     }
 
     /// Compare two [`Quaternion`]s for approximate equality.
@@ -116,11 +116,11 @@ impl ApproxEq for Quaternion {
     /// Uses a third [`Quaternion`] for element-wise thresholds.
     ///
     /// [`Quaternion`]: ../quaternion/struct.Quaternion.html
-    fn within_threshold(&self, rhs: &Quaternion, threshold: &Quaternion) -> bool {
-        self.r.within_threshold(&rhs.r, &threshold.r)
-            & self.i.within_threshold(&rhs.i, &threshold.i)
-            & self.j.within_threshold(&rhs.j, &threshold.j)
-            & self.k.within_threshold(&rhs.k, &threshold.k)
+    fn within_threshold(self, rhs: Quaternion, threshold: Quaternion) -> bool {
+        self.r.within_threshold(rhs.r, threshold.r)
+            & self.i.within_threshold(rhs.i, threshold.i)
+            & self.j.within_threshold(rhs.j, threshold.j)
+            & self.k.within_threshold(rhs.k, threshold.k)
     }
 }
 
