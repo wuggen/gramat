@@ -37,31 +37,31 @@ impl Angle {
 
     /// Get the value of this `Angle` in radians.
     #[inline(always)]
-    pub fn radians(&self) -> f32 {
+    pub fn radians(self) -> f32 {
         self.radians
     }
 
     /// Get the value of this `Angle` in degrees.
     #[inline(always)]
-    pub fn degrees(&self) -> f32 {
+    pub fn degrees(self) -> f32 {
         self.radians.to_degrees()
     }
 
     /// Get the sine of this `Angle`.
     #[inline(always)]
-    pub fn sin(&self) -> f32 {
+    pub fn sin(self) -> f32 {
         self.radians.sin()
     }
 
     /// Get the cosine of this `Angle`.
     #[inline(always)]
-    pub fn cos(&self) -> f32 {
+    pub fn cos(self) -> f32 {
         self.radians.cos()
     }
 
     /// Get the tangent of this `Angle`.
     #[inline(always)]
-    pub fn tan(&self) -> f32 {
+    pub fn tan(self) -> f32 {
         self.radians.tan()
     }
 
@@ -107,7 +107,7 @@ impl Angle {
 
     /// Simultaneously compute the sine and cosine of this `Angle`. Returns `(sin(x), cos(x))`.
     #[inline(always)]
-    pub fn sin_cos(&self) -> (f32, f32) {
+    pub fn sin_cos(self) -> (f32, f32) {
         self.radians.sin_cos()
     }
 }

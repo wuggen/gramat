@@ -36,7 +36,7 @@ use super::*;
 ///
 /// where `ROT(axis, angle)` is a rotation about axis `axis` by angle `angle` and `SHEAR_X(dist)`
 /// is a shear by distance `dist` that fixes the x-axis.
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Default)]
 #[repr(transparent)]
 pub struct Transform {
     mat: Mat4,
@@ -58,7 +58,7 @@ impl Transform {
     #[inline(always)]
     pub fn translate(self, offset: Vec3) -> Transform {
         Transform {
-            mat: &translate(offset) * &self.mat,
+            mat: translate(offset) * self.mat,
         }
     }
 
@@ -69,7 +69,7 @@ impl Transform {
     #[inline(always)]
     pub fn scale(self, factor: Vec3) -> Transform {
         Transform {
-            mat: &scale(factor) * &self.mat,
+            mat: scale(factor) * self.mat,
         }
     }
 
@@ -79,7 +79,7 @@ impl Transform {
     #[inline(always)]
     pub fn shear_x(self, y_amount: f32, z_amount: f32) -> Transform {
         Transform {
-            mat: &shear_x(y_amount, z_amount) * &self.mat,
+            mat: shear_x(y_amount, z_amount) * self.mat,
         }
     }
 
@@ -89,7 +89,7 @@ impl Transform {
     #[inline(always)]
     pub fn shear_y(self, x_amount: f32, z_amount: f32) -> Transform {
         Transform {
-            mat: &shear_y(x_amount, z_amount) * &self.mat,
+            mat: shear_y(x_amount, z_amount) * self.mat,
         }
     }
 
@@ -99,7 +99,7 @@ impl Transform {
     #[inline(always)]
     pub fn shear_z(self, x_amount: f32, y_amount: f32) -> Transform {
         Transform {
-            mat: &shear_z(x_amount, y_amount) * &self.mat,
+            mat: shear_z(x_amount, y_amount) * self.mat,
         }
     }
 
@@ -107,7 +107,7 @@ impl Transform {
     #[inline(always)]
     pub fn rotate(self, axis: Vec3, angle: Angle) -> Transform {
         Transform {
-            mat: &rotate(axis, angle) * &self.mat,
+            mat: rotate(axis, angle) * self.mat,
         }
     }
 
@@ -115,7 +115,7 @@ impl Transform {
     #[inline(always)]
     pub fn arbitrary(self, transform: Mat4) -> Transform {
         Transform {
-            mat: &transform * &self.mat,
+            mat: transform * self.mat,
         }
     }
 

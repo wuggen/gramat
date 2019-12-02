@@ -209,6 +209,12 @@ macro_rules! decl_vec {
             }
         }
 
+        impl Default for $name {
+            fn default() -> $name {
+                $name::zeros()
+            }
+        }
+
         impl AsRef<[f32]> for $name {
             #[inline(always)]
             fn as_ref(&self) -> &[f32] {

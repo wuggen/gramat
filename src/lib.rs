@@ -124,6 +124,7 @@ pub mod mat;
 pub mod quaternion;
 pub mod transform;
 pub mod vec;
+pub mod lerp;
 
 pub use angle::Angle;
 pub use fp::ApproxEq;

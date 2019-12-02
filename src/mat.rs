@@ -172,6 +172,12 @@ macro_rules! decl_mat {
             }
         }
 
+        impl Default for $name {
+            fn default() -> $name {
+                $name::identity()
+            }
+        }
+
         impl AsRef<[$coltype]> for $name {
             #[doc = "View this matrix as a slice containing its column vectors."]
             #[inline(always)]

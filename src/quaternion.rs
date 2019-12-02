@@ -239,6 +239,7 @@ quatop_mult_assign!(&Quaternion);
 
 macro_rules! quatop_div {
     ($lhs:ty, $rhs:ty) => {
+        #[allow(clippy::suspicious_arithmetic_impl)]
         impl Div<$rhs> for $lhs {
             type Output = Quaternion;
 
