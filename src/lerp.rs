@@ -24,6 +24,9 @@ impl ApproxEq for Fraction {
 }
 
 impl Fraction {
+    /// Create a new `Fraction`.
+    ///
+    /// Returns `None` if the given value is less than 0 or greater than 1.
     pub fn new(val: f32) -> Option<Fraction> {
         if val < 0.0 || val > 1.0 {
             None
@@ -32,14 +35,19 @@ impl Fraction {
         }
     }
 
+    /// Get the `f32` representation of this `Fraction`.
     pub fn get(self) -> f32 {
         self.0
     }
 }
 
+/// The error type for `Fraction`'s `TryFrom<f32>` implementation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MakeFractionError {
+    /// The given value was less than 0.
     ValueLessThanZero,
+
+    /// The given value was greater than 1.
     ValueGreaterThanOne,
 }
 
@@ -68,6 +76,10 @@ impl TryFrom<f32> for Fraction {
     }
 }
 
+/// Linearly interpolate two values.
+///
+/// The type `T` must support multiplication by `f32`s, and the output type of that multiplication
+/// must support addition with itself.
 pub fn lerp<T>(a: T, b: T, t: Fraction) -> <<T as Mul<f32>>::Output as Add>::Output
 where
     T: Mul<f32>,

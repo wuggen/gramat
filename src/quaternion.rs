@@ -7,38 +7,42 @@ use std::ops::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "vulkano")]
+use vulkano::pipeline::vertex::{VertexMember, VertexMemberTy};
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[repr(C)]
 pub struct Quaternion {
-    pub r: f32,
     pub i: f32,
     pub j: f32,
     pub k: f32,
+    pub r: f32,
 }
 
 impl Quaternion {
     /// Construct a `Quaternion` with the given components.
     #[inline(always)]
-    pub fn new(r: f32, i: f32, j: f32, k: f32) -> Quaternion {
-        Quaternion { r, i, j, k }
+    pub fn new(i: f32, j: f32, k: f32, r: f32) -> Quaternion {
+        Quaternion { i, j, k, r }
     }
 
     /// Construct a `Quaternion` with only a real part.
     #[inline(always)]
     pub fn real(r: f32) -> Quaternion {
-        Quaternion::new(r, 0.0, 0.0, 0.0)
+        Quaternion::new(0.0, 0.0, 0.0, r)
     }
 
     /// Construct a `Quaternion` with only a vector part.
     #[inline(always)]
     pub fn vector(vec: Vec3) -> Quaternion {
-        Quaternion::new(0.0, vec.x, vec.y, vec.z)
+        Quaternion::new(vec.x, vec.y, vec.z, 0.0)
     }
 
     /// Construct a `Quaternion` with the given real and vector parts.
     #[inline(always)]
     pub fn real_vector(r: f32, vec: Vec3) -> Quaternion {
-        Quaternion::new(r, vec.x, vec.y, vec.z)
+        Quaternion::new(vec.x, vec.y, vec.z, r)
     }
 
     /// Get the imaginary components of this `Quaternion` as a `Vec3`.
@@ -100,6 +104,14 @@ impl Quaternion {
             j: self.j / m,
             k: self.k / m,
         }
+    }
+}
+
+#[cfg(feature = "vulkano")]
+unsafe impl VertexMember for Quaternion {
+    #[inline(always)]
+    fn format() -> (VertexMemberTy, usize) {
+        (VertexMemberTy::F32, 4)
     }
 }
 
@@ -292,13 +304,14 @@ quatop_neg!(&Quaternion);
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::mem::{align_of, size_of};
 
     #[test]
     fn basic() {
-        let r = Quaternion::new(1.0, 0.0, 0.0, 0.0);
-        let i = Quaternion::new(0.0, 1.0, 0.0, 0.0);
-        let j = Quaternion::new(0.0, 0.0, 1.0, 0.0);
-        let k = Quaternion::new(0.0, 0.0, 0.0, 1.0);
+        let i = Quaternion::new(1.0, 0.0, 0.0, 0.0);
+        let j = Quaternion::new(0.0, 1.0, 0.0, 0.0);
+        let k = Quaternion::new(0.0, 0.0, 1.0, 0.0);
+        let r = Quaternion::new(0.0, 0.0, 0.0, 1.0);
 
         // Multiplication by unit real
         assert_approx_eq!(r * r, r);
@@ -324,5 +337,16 @@ mod test {
         assert_approx_eq!(k * j, -i);
 
         assert_approx_eq!(i * j * k, -r);
+    }
+
+    #[test]
+    fn mem_layout() {
+        assert_eq!(size_of::<Quaternion>(), 16);
+        assert_eq!(align_of::<Quaternion>(), 4);
+
+        assert_eq!(offset_of!(Quaternion, i), 0);
+        assert_eq!(offset_of!(Quaternion, j), 4);
+        assert_eq!(offset_of!(Quaternion, k), 8);
+        assert_eq!(offset_of!(Quaternion, r), 12);
     }
 }

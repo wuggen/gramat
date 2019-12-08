@@ -7,6 +7,9 @@ use std::ops::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "vulkano")]
+use vulkano::pipeline::vertex::{VertexMember, VertexMemberTy};
+
 pub trait SquareMatrix: Copy {
     /// The type used to represent the columns and rows of the matrix type.
     type VecType;
@@ -169,6 +172,15 @@ macro_rules! decl_mat {
 
             fn set_row(&mut self, i: usize, r: $coltype) {
                 $(self.$cols[i] = r.$dims;)+
+            }
+        }
+
+        #[cfg(feature = "vulkano")]
+        unsafe impl VertexMember for $name {
+            #[inline(always)]
+            fn format() -> (VertexMemberTy, usize) {
+                let n = count_args!($($cols),*);
+                (VertexMemberTy::F32, n*n)
             }
         }
 
@@ -671,6 +683,17 @@ mod test_mat2 {
     use super::*;
 
     test_mat!(Mat2, Vec2, x, y);
+
+    use std::mem::{size_of, align_of};
+
+    #[test]
+    fn mem_layout() {
+        assert_eq!(size_of::<Mat2>(), 16);
+        assert_eq!(align_of::<Mat2>(), 4);
+
+        assert_eq!(offset_of!(Mat2, col1), 0);
+        assert_eq!(offset_of!(Mat2, col2), 8);
+    }
 }
 
 #[cfg(test)]
@@ -717,8 +740,17 @@ mod test_mat3 {
         }
     }
 
+    use std::mem::{size_of, align_of};
+
     #[test]
-    fn matrix_inverse_specific() {}
+    fn mem_layout() {
+        assert_eq!(size_of::<Mat3>(), 36);
+        assert_eq!(align_of::<Mat3>(), 4);
+
+        assert_eq!(offset_of!(Mat3, col1), 0);
+        assert_eq!(offset_of!(Mat3, col2), 12);
+        assert_eq!(offset_of!(Mat3, col3), 24);
+    }
 }
 
 #[cfg(test)]
@@ -828,5 +860,18 @@ mod test_mat4 {
         );
         assert_approx_eq!((&MAT * &actual), Mat4::identity());
         assert_approx_eq!((&actual * &MAT), Mat4::identity());
+    }
+
+    use std::mem::{size_of, align_of};
+
+    #[test]
+    fn mem_layout() {
+        assert_eq!(size_of::<Mat4>(), 64);
+        assert_eq!(align_of::<Mat4>(), 4);
+
+        assert_eq!(offset_of!(Mat4, col1), 0);
+        assert_eq!(offset_of!(Mat4, col2), 16);
+        assert_eq!(offset_of!(Mat4, col3), 32);
+        assert_eq!(offset_of!(Mat4, col4), 48);
     }
 }

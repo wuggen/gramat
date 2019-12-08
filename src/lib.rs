@@ -134,3 +134,11 @@ pub use vec::{Vec2, Vec3, Vec4, Vector};
 
 #[cfg(test)]
 mod test_util;
+
+#[cfg(test)]
+#[macro_export]
+macro_rules! offset_of {
+    ($type:ty, $member:ident) => {
+        unsafe { &(*(::std::ptr::null::<$type>())).$member as *const _ as usize }
+    }
+}

@@ -11,11 +11,12 @@ use std::f32;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "vulkano")]
+use vulkano::pipeline::vertex::{VertexMember, VertexMemberTy};
+
 use crate::fp::ApproxEq;
 
 /// An angle struct independent of representation as either degrees or radians.
-///
-/// See the [module-level documentation](index.html) for more details.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(transparent)]
@@ -130,6 +131,14 @@ impl Angle {
     #[inline(always)]
     pub fn sin_cos(self) -> (f32, f32) {
         self.radians.sin_cos()
+    }
+}
+
+#[cfg(feature = "vulkano")]
+unsafe impl VertexMember for Angle {
+    #[inline(always)]
+    fn format() -> (VertexMemberTy, usize) {
+        (VertexMemberTy::F32, 1)
     }
 }
 
