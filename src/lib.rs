@@ -3,7 +3,7 @@
 //! Includes two, three, and four-dimensional real vectors and matrices, quaternions, and
 //! assorted utilities for transformations and projections.
 
-#![doc(html_root_url = "https://docs.rs/gramit/0.1.1")]
+#![doc(html_root_url = "https://docs.rs/gramit/0.2.0")]
 
 macro_rules! replace_tt {
     ($_t:tt, $sub:expr) => {
@@ -39,7 +39,7 @@ macro_rules! count_args {
 #[macro_export]
 macro_rules! assert_approx_eq {
     ($a:expr, $b:expr, $($msg:expr),*) => {
-        assert!($a.approx_eq(&$b), $($msg),*)
+        assert!($a.approx_eq($b), $($msg),*)
     };
 
     ($a:expr, $b:expr) => { assert_approx_eq!($a, $b,) };
@@ -76,7 +76,7 @@ macro_rules! assert_approx_eq {
 #[macro_export]
 macro_rules! assert_within_threshold {
     ($a:expr, $b:expr, $thresh:expr, $($msg:expr),*) => {
-        assert!($a.within_threshold(&$b, &$thresh), $($msg),*)
+        assert!($a.within_threshold($b, $thresh), $($msg),*)
     };
 
     ($a:expr, $b:expr, $thresh:expr) => { assert_within_threshold!($a, $b, $thresh,) };
@@ -119,17 +119,26 @@ macro_rules! vec4 {
 }
 
 pub mod angle;
+pub mod fp;
 pub mod mat;
 pub mod quaternion;
 pub mod transform;
-pub mod fp;
 pub mod vec;
+pub mod lerp;
 
 pub use angle::Angle;
-pub use mat::{SquareMatrix, Mat2, Mat3, Mat4};
-pub use quaternion::Quaternion;
 pub use fp::ApproxEq;
-pub use vec::{Vector, Vec2, Vec3, Vec4};
+pub use mat::{Mat2, Mat3, Mat4, SquareMatrix};
+pub use quaternion::Quaternion;
+pub use vec::{Vec2, Vec3, Vec4, Vector};
 
 #[cfg(test)]
 mod test_util;
+
+#[cfg(test)]
+#[macro_export]
+macro_rules! offset_of {
+    ($type:ty, $member:ident) => {
+        unsafe { &(*(::std::ptr::null::<$type>())).$member as *const _ as usize }
+    }
+}

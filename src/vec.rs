@@ -69,6 +69,14 @@
 use std::convert::*;
 use std::ops::*;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "vulkano")]
+use vulkano::pipeline::vertex::{VertexMember, VertexMemberTy};
+#[cfg(feature = "vulkano")]
+use vulkano::format::ClearValue;
+
 use super::*;
 
 /// Generic vector operations.
@@ -140,7 +148,8 @@ pub trait Vector {
 macro_rules! decl_vec {
     ($name:ident, $($dims:ident),+) => {
         #[repr(C)]
-        #[derive(Debug, Clone, Copy)]
+        #[derive(Debug, PartialEq, Clone, Copy)]
+        #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
         pub struct $name {
             $(pub $dims: f32),+
         }
@@ -205,6 +214,21 @@ macro_rules! decl_vec {
             }
         }
 
+        #[cfg(feature = "vulkano")]
+        unsafe impl VertexMember for $name {
+            #[inline(always)]
+            fn format() -> (VertexMemberTy, usize) {
+                (VertexMemberTy::F32, count_args!($($dims),+))
+            }
+        }
+
+        impl Default for $name {
+            #[inline(always)]
+            fn default() -> $name {
+                $name::zeros()
+            }
+        }
+
         impl AsRef<[f32]> for $name {
             #[inline(always)]
             fn as_ref(&self) -> &[f32] {
@@ -242,14 +266,14 @@ macro_rules! decl_vec {
         }
 
         impl ApproxEq for $name {
-            fn approx_eq(&self, rhs: &$name) -> bool {
-                $(self.$dims.approx_eq(&rhs.$dims))&+
+            fn approx_eq(self, rhs: $name) -> bool {
+                $(self.$dims.approx_eq(rhs.$dims))&+
             }
 
             #[doc = "Compare two vectors for approximate equality.\n\n"]
             #[doc = "Uses a third vector for component-wise thresholds."]
-            fn within_threshold(&self, rhs: &$name, threshold: &$name) -> bool {
-                $(self.$dims.within_threshold(&rhs.$dims, &threshold.$dims))&+
+            fn within_threshold(self, rhs: $name, threshold: $name) -> bool {
+                $(self.$dims.within_threshold(rhs.$dims, threshold.$dims))&+
             }
         }
 
@@ -399,6 +423,14 @@ impl Vec2 {
     }
 }
 
+#[cfg(feature = "vulkano")]
+impl Into<ClearValue> for Vec2 {
+    #[inline(always)]
+    fn into(self) -> ClearValue {
+        ClearValue::Float([self.x, self.y, 0.0, 1.0])
+    }
+}
+
 impl Vec3 {
     /// Compute the cross product `self` &times; `other`.
     pub fn cross(self, other: &Vec3) -> Vec3 {
@@ -438,6 +470,14 @@ impl Vec3 {
     }
 }
 
+#[cfg(feature = "vulkano")]
+impl Into<ClearValue> for Vec3 {
+    #[inline(always)]
+    fn into(self) -> ClearValue {
+        ClearValue::Float([self.x, self.y, self.z, 1.0])
+    }
+}
+
 impl Vec4 {
     /// Truncate the _w_ component of this `Vec4` to produce a `Vec3`.
     #[inline(always)]
@@ -452,6 +492,14 @@ impl Vec4 {
     /// Convert a homogeneous 4-vector to the corresponding point in 3-space.
     pub fn homogenize(self) -> Vec3 {
         self.truncate() / self.w
+    }
+}
+
+#[cfg(feature = "vulkano")]
+impl Into<ClearValue> for Vec4 {
+    #[inline(always)]
+    fn into(self) -> ClearValue {
+        ClearValue::Float([self.x, self.y, self.z, self.w])
     }
 }
 
@@ -496,81 +544,81 @@ macro_rules! test_vec {
         #[test]
         fn ones() {
             let v = $name::ones();
-            $(assert!(v.$dims.approx_eq(&1.0));)+
+            $(assert_approx_eq!(v.$dims, 1.0);)+
         }
 
         #[test]
         fn zeros() {
             let v = $name::zeros();
-            $(assert!(v.$dims.approx_eq(&0.0));)+
+            $(assert_approx_eq!(v.$dims, 0.0);)+
         }
 
         #[test]
         fn add() {
             let v = $name::ones() + $name::ones();
-            $(assert!(v.$dims.approx_eq(&2.0));)+
+            $(assert_approx_eq!(v.$dims, 2.0);)+
 
             let mut v = $name::ones();
             v += $name::ones();
-            $(assert!(v.$dims.approx_eq(&2.0));)+
+            $(assert_approx_eq!(v.$dims, 2.0);)+
         }
 
         #[test]
         fn sub() {
             let v = $name::ones() - $name::ones();
-            $(assert!(v.$dims.approx_eq(&0.0));)+
+            $(assert_approx_eq!(v.$dims, 0.0);)+
 
             let mut v = $name::ones();
             v -= $name::ones();
-            $(assert!(v.$dims.approx_eq(&0.0));)+
+            $(assert_approx_eq!(v.$dims, 0.0);)+
         }
 
         #[test]
         fn scalar_mul() {
             let v = $name::ones() * 2.0;
-            $(assert!(v.$dims.approx_eq(&2.0));)+
+            $(assert_approx_eq!(v.$dims, 2.0);)+
 
             let v = 2.0_f32 * $name::ones();
-            $(assert!(v.$dims.approx_eq(&2.0));)+
+            $(assert_approx_eq!(v.$dims, 2.0);)+
 
             let mut v = $name::ones();
             v *= 2.0;
-            $(assert!(v.$dims.approx_eq(&2.0));)+
+            $(assert_approx_eq!(v.$dims, 2.0);)+
         }
 
         #[test]
         fn scalar_div() {
             let v = $name::ones() / 2.0;
-            $(assert!(v.$dims.approx_eq(&0.5));)+
+            $(assert_approx_eq!(v.$dims, 0.5);)+
 
             let mut v = $name::ones();
             v /= 2.0;
-            $(assert!(v.$dims.approx_eq(&0.5));)+
+            $(assert_approx_eq!(v.$dims, 0.5);)+
         }
 
         #[test]
         fn unit_axes() {
             $(let v = $name::$dims();
-              assert!(v.$dims.approx_eq(&1.0));
-              assert!(v.length().approx_eq(&1.0));)+
+              assert_approx_eq!(v.$dims, 1.0);
+              assert_approx_eq!(v.length(), 1.0);)+
         }
 
         #[test]
         fn dot() {
-            assert!($name::ones().dot(&$name::ones()).approx_eq(&($name::DIMS as f32)));
+            assert_approx_eq!($name::ones().dot(&$name::ones()), ($name::DIMS as f32));
 
             let v = $name::ones() * 2.0;
-            assert!(v.dot(&v).approx_eq(&(count_args!($($dims),+) as f32 * 4.0)));
+            assert_approx_eq!(v.dot(&v), (count_args!($($dims),+) as f32 * 4.0));
 
             $(let v = $name::$dims() * 3.0;
-              assert!(v.dot(&v).approx_eq(&9.0));)+
+              assert_approx_eq!(v.dot(&v), 9.0);)+
         }
 
         #[test]
         fn length() {
-            assert!($name::zeros().length().approx_eq(&0.0));
-            assert!($name::ones().length().approx_eq(&(count_args!($($dims),+) as f32).sqrt()));
-            $(assert!($name::$dims().length().approx_eq(&1.0));)+
+            assert_approx_eq!($name::zeros().length(), 0.0);
+            assert_approx_eq!($name::ones().length(), (count_args!($($dims),+) as f32).sqrt());
+            $(assert_approx_eq!($name::$dims().length(), 1.0);)+
         }
 
         #[test]
@@ -581,7 +629,7 @@ macro_rules! test_vec {
             }
 
             for i in 0..count_args!($($dims),+) {
-                assert!(v[i].approx_eq(&(i as f32)));
+                assert_approx_eq!(v[i], (i as f32));
             }
         }
 
@@ -590,7 +638,7 @@ macro_rules! test_vec {
             let v: Vec<_> = $name::zeros().into();
             assert_eq!(v.len(), count_args!($($dims),+));
             for n in v {
-                assert!(n.approx_eq(&0.0));
+                assert_approx_eq!(n, 0.0);
             }
         }
     };
@@ -601,6 +649,16 @@ mod test_vec2 {
     use super::*;
 
     test_vec!(Vec2, x, y);
+
+    use std::mem::{size_of, align_of};
+
+    #[test]
+    fn mem_layout() {
+        assert_eq!(size_of::<Vec2>(), 8);
+        assert_eq!(align_of::<Vec2>(), 4);
+        assert_eq!(offset_of!(Vec2, x), 0);
+        assert_eq!(offset_of!(Vec2, y), 4);
+    }
 }
 
 #[cfg(test)]
@@ -608,6 +666,17 @@ mod test_vec3 {
     use super::*;
 
     test_vec!(Vec3, x, y, z);
+
+    use std::mem::{size_of, align_of};
+
+    #[test]
+    fn mem_layout() {
+        assert_eq!(size_of::<Vec3>(), 12);
+        assert_eq!(align_of::<Vec3>(), 4);
+        assert_eq!(offset_of!(Vec3, x), 0);
+        assert_eq!(offset_of!(Vec3, y), 4);
+        assert_eq!(offset_of!(Vec3, z), 8);
+    }
 }
 
 #[cfg(test)]
@@ -615,4 +684,16 @@ mod test_vec4 {
     use super::*;
 
     test_vec!(Vec4, x, y, z, w);
+
+    use std::mem::{size_of, align_of};
+
+    #[test]
+    fn mem_layout() {
+        assert_eq!(size_of::<Vec4>(), 16);
+        assert_eq!(align_of::<Vec4>(), 4);
+        assert_eq!(offset_of!(Vec4, x), 0);
+        assert_eq!(offset_of!(Vec4, y), 4);
+        assert_eq!(offset_of!(Vec4, z), 8);
+        assert_eq!(offset_of!(Vec4, w), 12);
+    }
 }

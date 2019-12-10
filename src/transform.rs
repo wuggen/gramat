@@ -36,6 +36,8 @@ use super::*;
 ///
 /// where `ROT(axis, angle)` is a rotation about axis `axis` by angle `angle` and `SHEAR_X(dist)`
 /// is a shear by distance `dist` that fixes the x-axis.
+#[derive(Debug, PartialEq, Clone, Copy, Default)]
+#[repr(transparent)]
 pub struct Transform {
     mat: Mat4,
 }
@@ -56,7 +58,7 @@ impl Transform {
     #[inline(always)]
     pub fn translate(self, offset: Vec3) -> Transform {
         Transform {
-            mat: &translate(offset) * &self.mat,
+            mat: translate(offset) * self.mat,
         }
     }
 
@@ -67,7 +69,7 @@ impl Transform {
     #[inline(always)]
     pub fn scale(self, factor: Vec3) -> Transform {
         Transform {
-            mat: &scale(factor) * &self.mat,
+            mat: scale(factor) * self.mat,
         }
     }
 
@@ -77,7 +79,7 @@ impl Transform {
     #[inline(always)]
     pub fn shear_x(self, y_amount: f32, z_amount: f32) -> Transform {
         Transform {
-            mat: &shear_x(y_amount, z_amount) * &self.mat,
+            mat: shear_x(y_amount, z_amount) * self.mat,
         }
     }
 
@@ -87,7 +89,7 @@ impl Transform {
     #[inline(always)]
     pub fn shear_y(self, x_amount: f32, z_amount: f32) -> Transform {
         Transform {
-            mat: &shear_y(x_amount, z_amount) * &self.mat,
+            mat: shear_y(x_amount, z_amount) * self.mat,
         }
     }
 
@@ -97,7 +99,7 @@ impl Transform {
     #[inline(always)]
     pub fn shear_z(self, x_amount: f32, y_amount: f32) -> Transform {
         Transform {
-            mat: &shear_z(x_amount, y_amount) * &self.mat,
+            mat: shear_z(x_amount, y_amount) * self.mat,
         }
     }
 
@@ -105,7 +107,7 @@ impl Transform {
     #[inline(always)]
     pub fn rotate(self, axis: Vec3, angle: Angle) -> Transform {
         Transform {
-            mat: &rotate(axis, angle) * &self.mat,
+            mat: rotate(axis, angle) * self.mat,
         }
     }
 
@@ -113,7 +115,7 @@ impl Transform {
     #[inline(always)]
     pub fn arbitrary(self, transform: Mat4) -> Transform {
         Transform {
-            mat: &transform * &self.mat,
+            mat: transform * self.mat,
         }
     }
 
@@ -240,9 +242,9 @@ pub fn ortho(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) 
     mat[1][1] = 2.0 / (top - bottom);
     mat[2][2] = -2.0 / (far - near);
 
-    mat[3][0] = - (right + left) / (right - left);
-    mat[3][1] = - (top + bottom) / (top - bottom);
-    mat[3][2] = - (far + near) / (far - near);
+    mat[3][0] = -(right + left) / (right - left);
+    mat[3][1] = -(top + bottom) / (top - bottom);
+    mat[3][2] = -(far + near) / (far - near);
 
     mat
 }
@@ -264,10 +266,10 @@ pub fn frustum(left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32
 
     mat[2][0] = (right + left) / (right - left);
     mat[2][1] = (top + bottom) / (top - bottom);
-    mat[2][2] = - (far + near) / (far - near);
+    mat[2][2] = -(far + near) / (far - near);
     mat[2][3] = -1.0;
 
-    mat[3][2] = - (2.0 * far * near) / (far - near);
+    mat[3][2] = -(2.0 * far * near) / (far - near);
 
     mat
 }
@@ -287,10 +289,10 @@ pub fn perspective(fovy: Angle, aspect_xy: f32, near: f32, far: f32) -> Mat4 {
 
     mat[0][0] = 1.0 / (aspect_xy * tan_half_fov);
     mat[1][1] = 1.0 / tan_half_fov;
-    mat[2][2] = - (far + near) / (far - near);
+    mat[2][2] = -(far + near) / (far - near);
 
     mat[2][3] = -1.0;
-    mat[3][2] = - (2.0 * far * near) / (far - near);
+    mat[3][2] = -(2.0 * far * near) / (far - near);
 
     mat
 }
@@ -357,9 +359,9 @@ mod test {
     #[test]
     fn test_shear() {
         let test_func = |v: Vec3, amt1, amt2| {
-            let expectedx = vec3!(v[0], v[1] + v[0]*amt1, v[2] + v[0]*amt2);
-            let expectedy = vec3!(v[0] + v[1]*amt1, v[1], v[2] + v[1]*amt2);
-            let expectedz = vec3!(v[0] + v[2]*amt1, v[1] + v[2]*amt2, v[2]);
+            let expectedx = vec3!(v[0], v[1] + v[0] * amt1, v[2] + v[0] * amt2);
+            let expectedy = vec3!(v[0] + v[1] * amt1, v[1], v[2] + v[1] * amt2);
+            let expectedz = vec3!(v[0] + v[2] * amt1, v[1] + v[2] * amt2, v[2]);
 
             let v = v.homogeneous();
 
@@ -371,15 +373,36 @@ mod test {
             let vty = (my * v).homogenize();
             let vtz = (mz * v).homogenize();
 
-            assert_approx_eq!(vtx, expectedx,
+            assert_approx_eq!(
+                vtx,
+                expectedx,
                 "Failure with v = {:?}, shear_x({}, {}). Expected {:?}, got {:?}.",
-                v, amt1, amt2, expectedx, vtx);
-            assert_approx_eq!(vty, expectedy,
+                v,
+                amt1,
+                amt2,
+                expectedx,
+                vtx
+            );
+            assert_approx_eq!(
+                vty,
+                expectedy,
                 "Failure with v = {:?}, shear_y({}, {}). Expected {:?}, got {:?}.",
-                v, amt1, amt2, expectedy, vty);
-            assert_approx_eq!(vtz, expectedz,
+                v,
+                amt1,
+                amt2,
+                expectedy,
+                vty
+            );
+            assert_approx_eq!(
+                vtz,
+                expectedz,
                 "Failure with v = {:?}, shear_z({}, {}). Expected {:?}, got {:?}.",
-                v, amt1, amt2, expectedz, vtz);
+                v,
+                amt1,
+                amt2,
+                expectedz,
+                vtz
+            );
         };
 
         for v in GenVec3::new(-4, 4) {

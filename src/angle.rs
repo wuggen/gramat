@@ -6,17 +6,43 @@
 //! [`Angle`]: struct.Angle.html
 
 use std::ops::*;
+use std::f32;
+
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "vulkano")]
+use vulkano::pipeline::vertex::{VertexMember, VertexMemberTy};
+
+use crate::fp::ApproxEq;
 
 /// An angle struct independent of representation as either degrees or radians.
-///
-/// See the [module-level documentation](index.html) for more details.
-#[derive(Debug, Clone, Copy, PartialOrd, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(transparent)]
 pub struct Angle {
     radians: f32,
 }
 
 impl Angle {
+    /// Construct an `Angle` of zero.
+    #[inline(always)]
+    pub fn zero() -> Angle {
+        Angle { radians: 0.0 }
+    }
+
+    /// Construct an `Angle` of 360 degrees (`2*PI` radians).
+    #[inline(always)]
+    pub fn full_circle() -> Angle {
+        Angle { radians: 2.0 * f32::consts::PI }
+    }
+
+    /// Construct an `Angle` of 180 degrees (`PI` radians).
+    #[inline(always)]
+    pub fn half_circle() -> Angle {
+        Angle { radians: f32::consts::PI }
+    }
+
     /// Construct an `Angle` from a value given in radians.
     #[inline(always)]
     pub fn from_radians(radians: f32) -> Angle {
@@ -33,31 +59,31 @@ impl Angle {
 
     /// Get the value of this `Angle` in radians.
     #[inline(always)]
-    pub fn radians(&self) -> f32 {
+    pub fn radians(self) -> f32 {
         self.radians
     }
 
     /// Get the value of this `Angle` in degrees.
     #[inline(always)]
-    pub fn degrees(&self) -> f32 {
+    pub fn degrees(self) -> f32 {
         self.radians.to_degrees()
     }
 
     /// Get the sine of this `Angle`.
     #[inline(always)]
-    pub fn sin(&self) -> f32 {
+    pub fn sin(self) -> f32 {
         self.radians.sin()
     }
 
     /// Get the cosine of this `Angle`.
     #[inline(always)]
-    pub fn cos(&self) -> f32 {
+    pub fn cos(self) -> f32 {
         self.radians.cos()
     }
 
     /// Get the tangent of this `Angle`.
     #[inline(always)]
-    pub fn tan(&self) -> f32 {
+    pub fn tan(self) -> f32 {
         self.radians.tan()
     }
 
@@ -67,7 +93,7 @@ impl Angle {
     /// For other values, produces `None`.
     pub fn asin(x: f32) -> Option<Angle> {
         let radians = x.asin();
-        if x.is_nan() {
+        if radians.is_nan() {
             None
         } else {
             Some(Angle { radians })
@@ -80,7 +106,7 @@ impl Angle {
     /// other values, produces `None`.
     pub fn acos(x: f32) -> Option<Angle> {
         let radians = x.acos();
-        if x.is_nan() {
+        if radians.is_nan() {
             None
         } else {
             Some(Angle { radians })
@@ -103,8 +129,34 @@ impl Angle {
 
     /// Simultaneously compute the sine and cosine of this `Angle`. Returns `(sin(x), cos(x))`.
     #[inline(always)]
-    pub fn sin_cos(&self) -> (f32, f32) {
+    pub fn sin_cos(self) -> (f32, f32) {
         self.radians.sin_cos()
+    }
+}
+
+#[cfg(feature = "vulkano")]
+unsafe impl VertexMember for Angle {
+    #[inline(always)]
+    fn format() -> (VertexMemberTy, usize) {
+        (VertexMemberTy::F32, 1)
+    }
+}
+
+impl Default for Angle {
+    /// Construct a zero `Angle`.
+    #[inline(always)]
+    fn default() -> Angle {
+        Angle::zero()
+    }
+}
+
+impl ApproxEq for Angle {
+    fn approx_eq(self, rhs: Angle) -> bool {
+        self.radians.approx_eq(rhs.radians)
+    }
+
+    fn within_threshold(self, rhs: Angle, threshold: Angle) -> bool {
+        self.radians.within_threshold(rhs.radians, threshold.radians)
     }
 }
 
@@ -186,5 +238,80 @@ impl DivAssign<f32> for Angle {
     #[inline(always)]
     fn div_assign(&mut self, rhs: f32) {
         self.radians /= rhs;
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::ApproxEq;
+    use std::f32::consts::PI;
+
+    #[test]
+    fn test_defaults() {
+        let z = Angle::zero();
+        let h = Angle::half_circle();
+        let f = Angle::full_circle();
+        let d = Angle::default();
+
+        assert_approx_eq!(z.degrees(), 0.0);
+        assert_approx_eq!(z.radians(), 0.0);
+
+        assert_approx_eq!(h.degrees(), 180.0);
+        assert_approx_eq!(h.radians(), PI);
+
+        assert_approx_eq!(f.degrees(), 360.0);
+        assert_approx_eq!(f.radians(), 2.0*PI);
+
+        assert_approx_eq!(z, d);
+    }
+
+    #[test]
+    fn test_from_radians() {
+        let a = Angle::from_radians(PI/2.0);
+        assert_approx_eq!(a.radians(), PI/2.0);
+        assert_approx_eq!(a.degrees(), 90.0);
+
+        let a = Angle::from_radians(PI/6.0);
+        assert_approx_eq!(a.radians(), PI/6.0);
+        assert_approx_eq!(a.degrees(), 30.0);
+    }
+
+    #[test]
+    fn test_from_degrees() {
+        let a = Angle::from_degrees(90.0);
+        assert_approx_eq!(a.radians(), PI/2.0);
+        assert_approx_eq!(a.degrees(), 90.0);
+
+        let a = Angle::from_degrees(30.0);
+        assert_approx_eq!(a.radians(), PI/6.0);
+        assert_approx_eq!(a.degrees(), 30.0);
+    }
+
+    #[test]
+    fn test_asin() {
+        let a = Angle::asin(0.5).unwrap();
+        assert_approx_eq!(a.degrees(), 30.0);
+
+        let a = Angle::asin(-f32::sqrt(3.0)/2.0).unwrap();
+        assert_approx_eq!(a.degrees(), -60.0, "a.degrees() -> {} ({})", a.degrees(), crate::fp::EQ_THRESHOLD_F32);
+    }
+
+    #[test]
+    fn test_asin_none() {
+        let a = Angle::asin(1.5);
+        assert!(a.is_none());
+
+        let a = Angle::asin(-1.1);
+        assert!(a.is_none());
+    }
+
+    #[test]
+    fn test_acos() {
+        let a = Angle::acos(0.5).unwrap();
+        assert_approx_eq!(a.degrees(), 60.0);
+
+        let a = Angle::acos(-f32::sqrt(3.0)/2.0).unwrap();
+        assert_approx_eq!(a.degrees(), 150.0);
     }
 }

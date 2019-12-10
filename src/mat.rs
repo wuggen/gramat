@@ -4,6 +4,12 @@ use super::*;
 use std::convert::*;
 use std::ops::*;
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "vulkano")]
+use vulkano::pipeline::vertex::{VertexMember, VertexMemberTy};
+
 pub trait SquareMatrix: Copy {
     /// The type used to represent the columns and rows of the matrix type.
     type VecType;
@@ -81,7 +87,8 @@ pub trait SquareMatrix: Copy {
 macro_rules! decl_mat {
     ($name:ident, $coltype:ident, $($cols:ident),+ | $($dims:ident),+) => {
         #[repr(C)]
-        #[derive(Debug, Clone, Copy)]
+        #[derive(Debug, PartialEq, Clone, Copy)]
+        #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
         pub struct $name {
             $($cols: $coltype),+
         }
@@ -168,6 +175,21 @@ macro_rules! decl_mat {
             }
         }
 
+        #[cfg(feature = "vulkano")]
+        unsafe impl VertexMember for $name {
+            #[inline(always)]
+            fn format() -> (VertexMemberTy, usize) {
+                let n = count_args!($($cols),*);
+                (VertexMemberTy::F32, n*n)
+            }
+        }
+
+        impl Default for $name {
+            fn default() -> $name {
+                $name::identity()
+            }
+        }
+
         impl AsRef<[$coltype]> for $name {
             #[doc = "View this matrix as a slice containing its column vectors."]
             #[inline(always)]
@@ -203,14 +225,14 @@ macro_rules! decl_mat {
         }
 
         impl ApproxEq for $name {
-            fn approx_eq(&self, rhs: &$name) -> bool {
-                $(self.$cols.approx_eq(&rhs.$cols))&+
+            fn approx_eq(self, rhs: $name) -> bool {
+                $(self.$cols.approx_eq(rhs.$cols))&+
             }
 
             #[doc = "Compare two matrices for approximate equality, using a third matrix"]
             #[doc = "for component-wise thresholds."]
-            fn within_threshold(&self, rhs: &$name, threshold: &$name) -> bool {
-                $(self.$cols.within_threshold(&rhs.$cols, &threshold.$cols))&+
+            fn within_threshold(self, rhs: $name, threshold: $name) -> bool {
+                $(self.$cols.within_threshold(rhs.$cols, threshold.$cols))&+
             }
         }
 
@@ -538,7 +560,7 @@ macro_rules! test_mat {
             let m = $name::ones();
             for i in 0..$name::DIMS {
                 for j in 0..$name::DIMS {
-                    assert!(m[i][j].approx_eq(&1.0));
+                    assert_approx_eq!(m[i][j], 1.0);
                 }
             }
         }
@@ -548,7 +570,7 @@ macro_rules! test_mat {
             let m = $name::zeros();
             for i in 0..$name::DIMS {
                 for j in 0..$name::DIMS {
-                    assert!(m[i][j].approx_eq(&0.0));
+                    assert_approx_eq!(m[i][j], 0.0);
                 }
             }
         }
@@ -559,9 +581,9 @@ macro_rules! test_mat {
             for i in 0..$name::DIMS {
                 for j in 0..$name::DIMS {
                     if i == j {
-                        assert!(m[i][j].approx_eq(&1.0));
+                        assert_approx_eq!(m[i][j], 1.0);
                     } else {
-                        assert!(m[i][j].approx_eq(&0.0));
+                        assert_approx_eq!(m[i][j], 0.0);
                     }
                 }
             }
@@ -582,9 +604,9 @@ macro_rules! test_mat {
             for i in 0..$name::DIMS {
                 for j in 0..$name::DIMS {
                     if i <= j {
-                        assert!(m[i][j].approx_eq(&1.0));
+                        assert_approx_eq!(m[i][j], 1.0);
                     } else {
-                        assert!(m[i][j].approx_eq(&0.0));
+                        assert_approx_eq!(m[i][j], 0.0);
                     }
                 }
             }
@@ -593,10 +615,10 @@ macro_rules! test_mat {
         #[test]
         fn identity_determinant() {
             let i = $name::identity();
-            assert!(i.determinant().approx_eq(&1.0), "Det = {}", i.determinant());
+            assert_approx_eq!(i.determinant(), 1.0, "Det = {}", i.determinant());
 
             let i = 3.0 * i;
-            assert!(i.determinant().approx_eq(&(3.0_f32).powi(count_args!($($dims),+))),
+            assert_approx_eq!(i.determinant(), (3.0_f32).powi(count_args!($($dims),+)),
                 "Det = {}", i.determinant());
         }
 
@@ -605,16 +627,16 @@ macro_rules! test_mat {
             let i = $name::identity();
             let i_inv = i.inverse();
 
-            assert!(i.approx_eq(&i_inv));
-            assert!((&i * &i_inv).approx_eq(&$name::identity()));
-            assert!((&i_inv * &i).approx_eq(&$name::identity()));
+            assert_approx_eq!(i, i_inv);
+            assert_approx_eq!((&i * &i_inv), $name::identity());
+            assert_approx_eq!((&i_inv * &i), $name::identity());
 
             let i = 2.0 * i;
             let i_inv = i.inverse();
 
-            assert!(i_inv.approx_eq(&(0.5 * $name::identity())), "i_inv: {:?}", i_inv);
-            assert!((&i * &i_inv).approx_eq(&$name::identity()));
-            assert!((&i_inv * &i).approx_eq(&$name::identity()));
+            assert_approx_eq!(i_inv, (0.5 * $name::identity()), "i_inv: {:?}", i_inv);
+            assert_approx_eq!((&i * &i_inv), $name::identity());
+            assert_approx_eq!((&i_inv * &i), $name::identity());
         }
 
         #[test]
@@ -626,7 +648,7 @@ macro_rules! test_mat {
                 v += $vec::ones();
             }
 
-            assert!(m.determinant().approx_eq(&0.0));
+            assert_approx_eq!(m.determinant(), 0.0);
         }
 
         #[test]
@@ -645,12 +667,12 @@ macro_rules! test_mat {
                 m.set_row(2, &v + m.get_col(2) - m.get_row(1));
             }
 
-            assert!(!m.determinant().approx_eq(&0.0), "det: {}", m.determinant());
+            assert!(!m.determinant().approx_eq(0.0), "det: {}", m.determinant());
 
             let m_inv = m.inverse();
-            assert!((&m * &m_inv).approx_eq(&$name::identity()),
+            assert_approx_eq!((&m * &m_inv), $name::identity(),
                 "m: {:?}\ni: {:?}\nm * i: {:?}", m, m_inv, &m * &m_inv);
-            assert!((&m_inv * &m).approx_eq(&$name::identity()),
+            assert_approx_eq!((&m_inv * &m), $name::identity(),
                 "m: {:?}\ni: {:?}\ni * m: {:?}", m, m_inv, &m_inv * &m);
         }
     };
@@ -661,6 +683,17 @@ mod test_mat2 {
     use super::*;
 
     test_mat!(Mat2, Vec2, x, y);
+
+    use std::mem::{size_of, align_of};
+
+    #[test]
+    fn mem_layout() {
+        assert_eq!(size_of::<Mat2>(), 16);
+        assert_eq!(align_of::<Mat2>(), 4);
+
+        assert_eq!(offset_of!(Mat2, col1), 0);
+        assert_eq!(offset_of!(Mat2, col2), 8);
+    }
 }
 
 #[cfg(test)]
@@ -694,8 +727,9 @@ mod test_mat3 {
         for i in 0..3 {
             for j in 0..3 {
                 let k = i * 3 + j;
-                assert!(
-                    expected[k].approx_eq(&MAT.minor(i, j)),
+                assert_approx_eq!(
+                    expected[k],
+                    MAT.minor(i, j),
                     "Minor {},{}: expected {}, actually {}",
                     i,
                     j,
@@ -706,8 +740,17 @@ mod test_mat3 {
         }
     }
 
+    use std::mem::{size_of, align_of};
+
     #[test]
-    fn matrix_inverse_specific() {}
+    fn mem_layout() {
+        assert_eq!(size_of::<Mat3>(), 36);
+        assert_eq!(align_of::<Mat3>(), 4);
+
+        assert_eq!(offset_of!(Mat3, col1), 0);
+        assert_eq!(offset_of!(Mat3, col2), 12);
+        assert_eq!(offset_of!(Mat3, col3), 24);
+    }
 }
 
 #[cfg(test)]
@@ -752,8 +795,9 @@ mod test_mat4 {
         for i in 0..4 {
             for j in 0..4 {
                 let k = i * 4 + j;
-                assert!(
-                    expected[k].approx_eq(&MAT.minor(i, j)),
+                assert_approx_eq!(
+                    expected[k],
+                    MAT.minor(i, j),
                     "Minor {},{}: expected {}, actually {}",
                     i,
                     j,
@@ -773,8 +817,9 @@ mod test_mat4 {
         for i in 0..4 {
             for j in 0..4 {
                 let k = i * 4 + j;
-                assert!(
-                    expected[k].approx_eq(&MAT.cofactor(i, j)),
+                assert_approx_eq!(
+                    expected[k],
+                    MAT.cofactor(i, j),
                     "Cofactor {},{}: expected {}, actually {}",
                     i,
                     j,
@@ -787,8 +832,9 @@ mod test_mat4 {
 
     #[test]
     fn determinant_specific() {
-        assert!(
-            MAT.determinant().approx_eq(&2.0),
+        assert_approx_eq!(
+            MAT.determinant(),
+            2.0,
             "Determinant: expected {}, actually {}",
             2.0,
             MAT.determinant()
@@ -805,13 +851,27 @@ mod test_mat4 {
         );
         let actual = MAT.inverse();
 
-        assert!(
-            actual.approx_eq(&expected),
+        assert_approx_eq!(
+            actual,
+            expected,
             "Inverse: expected {:?}, actually {:?}",
             expected,
             actual
         );
-        assert!((&MAT * &actual).approx_eq(&Mat4::identity()));
-        assert!((&actual * &MAT).approx_eq(&Mat4::identity()));
+        assert_approx_eq!((&MAT * &actual), Mat4::identity());
+        assert_approx_eq!((&actual * &MAT), Mat4::identity());
+    }
+
+    use std::mem::{size_of, align_of};
+
+    #[test]
+    fn mem_layout() {
+        assert_eq!(size_of::<Mat4>(), 64);
+        assert_eq!(align_of::<Mat4>(), 4);
+
+        assert_eq!(offset_of!(Mat4, col1), 0);
+        assert_eq!(offset_of!(Mat4, col2), 16);
+        assert_eq!(offset_of!(Mat4, col3), 32);
+        assert_eq!(offset_of!(Mat4, col4), 48);
     }
 }
